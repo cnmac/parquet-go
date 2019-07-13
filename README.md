@@ -20,6 +20,13 @@ dep ensure
 cd example/
 go run local_flat.go
 ```
+Or use go mod.
+```sh
+cd parquet-go/
+go mod download
+cd example/
+go run local_flat.go
+```
 
 ## Type
 There are two types in Parquet: Primitive Type and Logical Type. Logical types are stored as primitive types. The following list is the currently implemented data types:
