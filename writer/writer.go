@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"reflect"
 	"sync"
+	"errors"
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/common"
@@ -141,7 +142,7 @@ func (self *ParquetWriter) Write(src interface{}) error {
 	}
 
 	if self.CheckSizeCritical <= ln {
-		self.ObjSize = common.SizeOf(val) + 1
+		self.ObjSize = (self.ObjSize + common.SizeOf(val))/2 + 1
 	}
 	self.ObjsSize += self.ObjSize
 	self.Objs = append(self.Objs, src)
@@ -185,6 +186,19 @@ func (self *ParquetWriter) flushObjs() error {
 		}
 
 		go func(b, e int, index int64) {
+			defer func() {
+				if r := recover(); r != nil {
+					switch x := r.(type) {
+					case string:
+						err = errors.New(x)
+					case error:
+						err = x
+					default:
+						err = errors.New("unknown error")
+					}
+				}
+			}()
+
 			if e <= b {
 				doneChan <- 0
 				return
